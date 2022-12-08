@@ -43,7 +43,7 @@
 // Number of samples used in variance calculation. Changing this effects the threshold
 #define SENSORS_NBR_OF_BIAS_SAMPLES 1024
 
-// Variance threshold to take zero bias for gyro
+
 #define GYRO_VARIANCE_BASE 5000
 #define GYRO_VARIANCE_THRESHOLD_X (GYRO_VARIANCE_BASE)
 #define GYRO_VARIANCE_THRESHOLD_Y (GYRO_VARIANCE_BASE)
@@ -152,17 +152,17 @@ static void sensorsTask(void *param) {
 
 			sensorData.interruptTimestamp = imuIntTimestamp;
 
-			// sensors step 1-read data from I2C
+			
 			uint8_t dataLen = (uint8_t) (SENSORS_MPU6050_BUFF_LEN);
 			i2cdevReadReg8(I2C0_DEV, MPU6050_ADDRESS_AD0_LOW,
 			MPU6050_RA_ACCEL_XOUT_H, dataLen, buffer);
 
-			// sensors step 2-process the respective data
+			
 			processAccGyroMeasurements(&(buffer[0]));
-			// sensors step 3- queue sensors data  on the output queues
+			
 			xQueueOverwrite(accelerometerDataQueue, &sensorData.acc);
 			xQueueOverwrite(gyroDataQueue, &sensorData.gyro);
-			// sensors step 4- Unlock stabilizer task
+			
 			xSemaphoreGive(dataReady);
 		}
 	}
@@ -177,7 +177,6 @@ void processAccGyroMeasurements(const uint8_t *buffer) {
 
 	Axis3f accScaled;
 
-	// sensors step 2.1 read from buffer
 	accelRaw.x = (((int16_t) buffer[0]) << 8) | buffer[1];
 	accelRaw.y = (((int16_t) buffer[2]) << 8) | buffer[3];
 	accelRaw.z = (((int16_t) buffer[4]) << 8) | buffer[5];
@@ -185,27 +184,26 @@ void processAccGyroMeasurements(const uint8_t *buffer) {
 	gyroRaw.y = (((int16_t) buffer[10]) << 8) | buffer[11];
 	gyroRaw.z = (((int16_t) buffer[12]) << 8) | buffer[13];
 
-	// sensors step 2.2 Calculates the gyro bias first when the  variance is below threshold
+
 	gyroBiasFound = processGyroBias(gyroRaw.x, gyroRaw.y, gyroRaw.z, &gyroBias);
 
-	//sensors step 2.3 Calculates the acc scale when platform is steady
+
 	if (gyroBiasFound) {
 		processAccScale(accelRaw.x, accelRaw.y, accelRaw.z);
 	}
 
-	// sensors step 2.4 convert  digtal value to physical angle
+
 	sensorData.gyro.x = (gyroRaw.x - gyroBias.x) * SENSORS_DEG_PER_LSB_CFG; //rotace - pred zavorkou
 	sensorData.gyro.y = (gyroRaw.y - gyroBias.y) * SENSORS_DEG_PER_LSB_CFG;
 	sensorData.gyro.z = (gyroRaw.z - gyroBias.z) * SENSORS_DEG_PER_LSB_CFG;
 
-	// sensors step 2.5 low pass filter
 	applyAxis3fLpf((lpf2pData*) (&gyroLpf), &sensorData.gyro);
 
 	accScaled.x = (accelRaw.x) * SENSORS_G_PER_LSB_CFG / accScale; //rotace - pred zavorkou
 	accScaled.y = (accelRaw.y) * SENSORS_G_PER_LSB_CFG / accScale;
 	accScaled.z = (accelRaw.z) * SENSORS_G_PER_LSB_CFG / accScale;
 
-	// sensors step 2.6 Compensate for a miss-aligned accelerometer.
+
 	sensorsAccAlignToGravity(&accScaled, &sensorData.acc);
 	applyAxis3fLpf((lpf2pData*) (&accLpf), &sensorData.acc);
 }

@@ -55,7 +55,7 @@ bool estimatorComplementaryTest(void) {
 }
 
 void estimatorComplementary(state_t *state, sensorData_t *sensorData, control_t *control, const uint32_t tick) {
-	sensorsMpu6050Acquire(sensorData, tick); // Read sensors at full rate (1000Hz)
+	sensorsMpu6050Acquire(sensorData, tick); // Read sensors  (1000Hz)
 	sensorReadMag(&sensorData->mag);
 	/*if (RATE_DO_EXECUTE(5, tick)) {
 		ESP_LOGI(" ", "%d ", sensorData->mag);

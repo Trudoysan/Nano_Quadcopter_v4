@@ -1,7 +1,6 @@
 
 
 //#include <stdbool.h>
-/* FreeRTOS includes */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -22,12 +21,12 @@
  #include "commander.h"
 //#include "adc_esp32.h"
 
-// Private variable
+
 static bool isInit;
 
 STATIC_MEM_TASK_ALLOC(systemTask, SYSTEM_TASK_STACKSIZE);
 
-// System wide synchronisation
+
 xSemaphoreHandle canStartMutex;
 static StaticSemaphore_t canStartMutexBuffer;
 
@@ -37,7 +36,7 @@ void systemLaunch(void) {
 	STATIC_MEM_TASK_CREATE(systemTask, systemTask, SYSTEM_TASK_NAME, NULL, SYSTEM_TASK_PRI);
 }
 
-// This must be the first module to be initialized!
+
 void systemInit(void) {
 	if (isInit)
 		return;
@@ -75,21 +74,20 @@ void systemTask(void *arg) {
 
 	//workerLoop();
 
-//Should never reach this point!
+
 	while (1) {
 		ESP_LOGI("systemTask", "while(1) Delay");
 		vTaskDelay(portMAX_DELAY);
 	}
 }
 
-// Global system variables
+
 void systemStart() {
 	xSemaphoreGive(canStartMutex);
 }
 
 void systemWaitStart(void) {
-	//This permits to guarantee that the system task is initialized before other
-	//tasks waits for the start event.
+
 	while (!isInit)
 		vTaskDelay(2);
 

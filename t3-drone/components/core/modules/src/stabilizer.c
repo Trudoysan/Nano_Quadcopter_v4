@@ -61,9 +61,6 @@ void stabilizerInit(void) {
 	isInit = true;
 }
 
-// The stabilizer loop runs at 1kHz (stock) or 500Hz (kalman). It is the
-// responsibility of the different functions to run slower by skipping call
-//  (ie. returning without modifying the output structure).
 
 static void stabilizerTask(void *param) {
 	uint32_t tick;
@@ -74,7 +71,7 @@ static void stabilizerTask(void *param) {
 
 	ESP_LOGI("stabilizerTask", "Wait for sensor calibration...");
 
-	// Wait for sensors to be calibrated
+	
 	lastWakeTime = xTaskGetTickCount();
 	while (!sensorsMpu6050Calibrated()) {
 		vTaskDelayUntil(&lastWakeTime, F2T(RATE_MAIN_LOOP));
